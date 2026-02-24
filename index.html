@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>My Hajiri App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+body{
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+input{
+  padding:8px;
+  margin:5px;
+  border-radius:6px;
+  border:none;
+}
+button{
+  padding:8px 15px;
+  border:none;
+  border-radius:6px;
+  background:#38bdf8;
+  font-weight:bold;
+  cursor:pointer;
+}
+.card{
+  background:#1e293b;
+  padding:15px;
+  border-radius:10px;
+  margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📅 Kaam Ki Hajiri</h2>
+
+<input type="number" id="atd" placeholder="ATD (0/1)">
+<input type="number" id="amt" placeholder="AMT (1-3 digit)">
+<input type="number" id="adv" placeholder="ADV (1-4 digit)">
+<br>
+<button onclick="saveData()">Save Hajiri</button>
+
+<div class="card">
+<h3>Saved Records</h3>
+<div id="records">No records yet.</div>
+</div>
+
+<script>
+let tg = window.Telegram.WebApp;
+tg.expand();
+
+let user = tg.initDataUnsafe.user;
+
+function getKey(){
+  return "hajiri_" + user.id;
+}
+
+function saveData(){
+  let atd = document.getElementById("atd").value;
+  let amt = document.getElementById("amt").value;
+  let adv = document.getElementById("adv").value;
+
+  if(!/^\d{1}$/.test(atd)){
+    alert("ATD 1 digit hona chahiye");
+    return;
+  }
+
+  if(!/^\d{1,3}$/.test(amt)){
+    alert("AMT 1-3 digit hona chahiye");
+    return;
+  }
+
+  if(!/^\d{1,4}$/.test(adv)){
+    alert("ADV 1-4 digit hona chahiye");
+    return;
+  }
+
+  let record = {
+    date: Date.now(),
+    atd: Number(atd),
+    amt: Number(amt),
+    adv: Number(adv)
+  };
+
+  let oldData = JSON.parse(localStorage.getItem(getKey())) || [];
+  oldData.push(record);
+
+  localStorage.setItem(getKey(), JSON.stringify(oldData));
+
+  document.getElementById("atd").value="";
+  document.getElementById("amt").value="";
+  document.getElementById("adv").value="";
+
+  loadData();
+}
+
+function loadData(){
+  let data = JSON.parse(localStorage.getItem(getKey())) || [];
+
+  if(data.length===0){
+    document.getElementById("records").innerHTML="No records yet.";
+    return;
+  }
+
+  document.getElementById("records").innerHTML =
+    data.map((r,i)=>`
+      <p>
+      📌 ${new Date(r.date).toLocaleDateString()} |
+      ATD: ${r.atd} |
+      AMT: ${r.amt} |
+      ADV: ${r.adv}
+      <button onclick="deleteRecord(${i})">❌</button>
+      </p>
+    `).join("");
+}
+
+function deleteRecord(index){
+  let data = JSON.parse(localStorage.getItem(getKey())) || [];
+  data.splice(index,1);
+  localStorage.setItem(getKey(), JSON.stringify(data));
+  loadData();
+}
+
+if(user){
+  loadData();
+}else{
+  document.body.innerHTML="Open inside Telegram!";
+}
+</script>
+
+</body>
+</html>
