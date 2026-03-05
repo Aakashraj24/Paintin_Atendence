@@ -76,7 +76,7 @@ function json_to_table_data(jsonList) {
         if (atd == 0 && adv == 0) {
             tds = `<tr><td class="date" width="20%">${dtc.split(" : ")[2]}</td><td class="atd">--</td><td class="adv">---</td><td class="available">---</td></tr>`
         } else if(atd == 0 && adv != 0) {
-            tds = `<tr><td class="date" width="20%">${dtc.split(" : ")[2]}</td><td class="atd">${atd}</td><td class="adv">---</td><td class="available">₹${total_available}</td></tr>`
+            tds = `<tr><td class="date" width="20%">${dtc.split(" : ")[2]}</td><td class="atd">---</td><td class="adv">---</td><td class="available">₹${total_available}</td></tr>`
         } else {
             tds = `<tr><td class="date" width="20%">${dtc.split(" : ")[2]}</td><td class="atd">${atd}</td><td class="adv">${adv = adv ? "₹"+adv : "---"}</td><td class="available">₹${total_available}</td></tr>`
         }
