@@ -21,8 +21,10 @@
             <button id="sCopy" style="background:#303030;border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer">Copy</button>
         </div>
         <div style="display:flex;border-bottom:1px solid #30363d;position:sticky;top:44px;width:100%;background-color:#0D1117;">
-            <div id="sTab1" style="padding:6px 10px;cursor:pointer;border-bottom:2px solid #58a6ff;">Requests</div>
+            <div id="sTab1" style="padding:6px 10px;cursor:pointer;border-bottom:2px solid #58a6ff;">Network</div>
             <div id="sTab2" style="padding:6px 10px;cursor:pointer">Response</div>
+            <div id="sTab3" style="padding:6px 10px;cursor:pointer">Storage</div>
+            
         </div>
         <div id="sList" style="flex:1;overflow:scroll;overflow-x:scroll;white-space:nowrap;-webkit-overflow-scrolling:touch"></div>
         <div id="sReq" style="flex:1;display:none;flex-direction:column">
@@ -62,6 +64,24 @@
         document.addEventListener("mousemove", e=>{ if(!drag) return; p.style.left=e.clientX-dx+"px"; p.style.top=e.clientY-dy+"px"; p.style.bottom="auto"; });
         document.addEventListener("mouseup", ()=>drag=false);
     }
+    
+    function formateStatusCode(status) {
+    let color = '';
+    
+     if (status >= 200 && status < 300) {
+            color = 'green'; // Success
+        } else if (status >= 300 && status < 400) {
+            color = 'orange'; // Redirect
+        } else if (status >= 400 && status < 500) {
+            color = 'red'; // Client Error
+        } else if (status >= 500 && status <= 500) {
+            color = 'darkred'; // Server Error
+        } else {
+            color = 'gray'; // Unknown
+        }
+    
+        return `<span style="color:${color}" class="status">${status}</span>`;
+    }
 
     function render() {
         UI();
@@ -71,7 +91,7 @@
         window.__reqs.forEach(r=>{
             let d=document.createElement("div");
             d.style="padding:6px;border-bottom:1px solid #30363d;cursor:pointer";
-            d.innerHTML=`<span style="color:#58a6ff">${r.method}</span> <span style="color:#3fb950">${r.status}</span><br><span style="color:#8b949e">${r.url.replace(/https?:\/\/[^\/]+/,"")}</span>`;
+            d.innerHTML=`<div class="rq-info" style="display: flex;font-size: 12px;align-items: center;justify-content: space-between;"><span class="method">${r.method}</span>${formateStatusCode(r.status)}<span class="time">${r.time/1000}s</span><span class="size">${r.size} Bytes</span></div><div class="re-url" style="color: #808080;overflow-x: hidden;display: flex;justify-content: flex-start;;font-size: 18px;height: 20px">${r.url}</div>`;
             d.onclick=()=>{ window.__cur=r; document.getElementById("sTab2").click(); show("response"); }
             l.appendChild(d);
         });
@@ -104,10 +124,15 @@
     const _f = window.fetch;
     window.fetch = async function(url,options={}) {
         let m=options.method||"GET", h=options.headers||{}, b=options.body||null;
+        const start = performance.now();
         let r = await _f.apply(this,arguments);
+        const end = performance.now();
+        let duration = Math.round(end - start);
+        
         let c = r.clone();
         c.text().then(t=>{
-            window.__reqs.push({method:m,url,status:r.status,h:h,res:t,body:b,cookies:document.cookie});
+            let bts = r.headers.get("content-length") || t.length;
+            window.__reqs.push({method:m,url,status:r.status,h:h,res:t,body:b,time:duration,size:bts});
             render();
         });
         return r;
@@ -117,6 +142,6 @@
     const _o=XMLHttpRequest.prototype.open, _s=XMLHttpRequest.prototype.send, _sh=XMLHttpRequest.prototype.setRequestHeader;
     XMLHttpRequest.prototype.open=function(m,u){ this._m=m; this._u=u; this._h={}; return _o.apply(this,arguments); }
     XMLHttpRequest.prototype.setRequestHeader=function(k,v){ this._h[k]=v; return _sh.apply(this,arguments); }
-    XMLHttpRequest.prototype.send=function(b){ this._body=b; this.addEventListener("load",()=>{ window.__reqs.push({method:this._m,url:this._u,status:this.status,h:this._h,res:this.responseText,body:this._body,cookies:document.cookie}); render(); }); return _s.apply(this,arguments); }
+    XMLHttpRequest.prototype.send=function(b){ const start = performance.now();this._body=b; this.addEventListener("load",()=>{const end = performance.now();const duration = Math.round(end - start);let bts = this.getResponseHeader("content-length") || this.responseText.length;window.__reqs.push({method:this._m,url:this._u,status:this.status,h:this._h,res:this.responseText,body:this._body,size:bts,time:duration}); render(); }); return _s.apply(this,arguments); }
 
 })();
