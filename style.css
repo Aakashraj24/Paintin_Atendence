@@ -66,6 +66,7 @@ tr,th,td{
 /* Ended table styling */
 
 .fix-button{
+    display: none;
     text-align: center;
     color: #fff;
     font-size: 20px;
