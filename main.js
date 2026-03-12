@@ -22,7 +22,9 @@ myData = [
     { "date": "2026-03-05T00:00:00Z", "atd": 1, "adv": 0 },
     { "date": "2026-03-06T00:00:00Z", "atd": 1, "adv": 0 },
     { "date": "2026-03-07T00:00:00Z", "atd": 1.5, "adv": 0 },
-    { "date": "2026-03-08T00:00:00Z", "atd": 1, "adv": 0 }  
+    { "date": "2026-03-08T00:00:00Z", "atd": 1, "adv": 0 },
+    { "date": "2026-03-12T00:00:00Z", "atd": 0, "adv": 5000 },
+    
 ]
 
 function getFormatedDate(year, month, date) {
